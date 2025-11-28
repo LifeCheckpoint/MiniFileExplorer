@@ -3,8 +3,8 @@
 
 struct Status
 {
-    StatusCode code;     // 状态码
-    std::string message; // 错误信息
+    StatusCode code;
+    std::string message;
 
     Status(StatusCode c = StatusCode::Success, std::string msg = "") : code(c), message(msg) {}
 

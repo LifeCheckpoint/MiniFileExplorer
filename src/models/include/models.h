@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -14,6 +15,13 @@ enum class FileType {
     Unknown
 };
 
+// 排序方式枚举
+enum class SortMode {
+    Default,
+    BySize,
+    ByTime
+};
+
 // 单个文件或文件夹的详细信息
 struct FileInfo {
     std::string name;                           // 文件名
@@ -21,11 +29,4 @@ struct FileInfo {
     FileType type;                              // 类型
     uintmax_t size;                             // 大小 (字节)，未统计为 -1
     std::filesystem::file_time_type modifyTime; // 修改时间
-};
-
-// 排序方式枚举
-enum class SortMode {
-    Default,
-    BySize,
-    ByTime
 };

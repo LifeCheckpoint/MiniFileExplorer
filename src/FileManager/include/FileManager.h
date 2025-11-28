@@ -1,5 +1,5 @@
-// FileManager.h
 #pragma once
+
 #include "status.h"
 #include "models.h"
 #include <filesystem>
@@ -8,6 +8,7 @@
 using Path = std::filesystem::path;
 
 class FileManager {
+
 private:
     std::filesystem::path currentPath;
 
@@ -16,6 +17,7 @@ public:
     FileManager();
     // 析构函数
     ~FileManager();
+
 
     // 获取工作目录
     // [Out] workingPath: 当前工作目录
