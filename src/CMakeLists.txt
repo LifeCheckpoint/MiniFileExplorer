@@ -1,11 +1,11 @@
-add_subdirectory(models)
+add_subdirectory(Models)
 add_subdirectory(FileManager)
 
 add_executable(MiniFileExplorer main.cpp)
 
 target_link_libraries(MiniFileExplorer PUBLIC
     FileManager
-    models
+    Models
 )
 
 target_link_libraries(MiniFileExplorer PUBLIC
