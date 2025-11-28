@@ -28,14 +28,4 @@ FetchContent_MakeAvailable(tabulate)
 FetchContent_Declare(replxx GIT_REPOSITORY https://github.com/GerHobbelt/replxx.git GIT_TAG 97a5401)
 FetchContent_MakeAvailable(replxx)
 
-# Source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(MiniFileExplorer ${SOURCES})
-
-# Include directories and link libraries
-target_include_directories(MiniFileExplorer PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(MiniFileExplorer PRIVATE 
-    fmt::fmt 
-    tabulate::tabulate 
-    replxx 
-)
+add_subdirectory(src)
