@@ -33,3 +33,5 @@ FetchContent_Declare(CLI11 GIT_REPOSITORY https://github.com/CLIUtils/CLI11 GIT_
 FetchContent_MakeAvailable(CLI11)
 
 add_subdirectory(src)
+
+add_subdirectory(tests)

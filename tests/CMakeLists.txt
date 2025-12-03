@@ -1,0 +1,2 @@
+add_executable(subcommand_reproduce subcommand_reproduce.cpp)
+target_link_libraries(subcommand_reproduce PRIVATE CLI11::CLI11)

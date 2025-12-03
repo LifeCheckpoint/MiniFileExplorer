@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <algorithm>
 
 class CommandParser {
 public:
@@ -51,10 +52,17 @@ public:
     void process(const std::string& inputLine) {
         if (inputLine.empty()) return;
 
+        // Reset temporary variables before parsing
+        temp_path_src.clear();
+        temp_path_dst.clear();
+        temp_flag_size = false;
+        temp_flag_time = false;
+
         std::vector<std::string> args = CLI::detail::split_up(inputLine);
         
-        // Use a dummy program name to avoid parse command to program name confusion
-        args.insert(args.begin(), "shell_dummy");
+        // Reverse arguments because CLI11::App::parse(std::vector<std::string>&) expects reversed arguments
+        // and processes them from back to front.
+        std::reverse(args.begin(), args.end());
 
         try {
             app.parse(args);
