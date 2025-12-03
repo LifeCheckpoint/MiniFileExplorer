@@ -11,8 +11,6 @@
 
 using Path = std::filesystem::path;
 
-std::string Controller::outputMsgCur;
-
 Controller::Controller() {
     fileManager = std::make_shared<FileManager>();
     commandParser = std::make_shared<CommandParser>();
@@ -25,7 +23,9 @@ void Controller::setupBindings()
 {
     commandParser->onChangeDirectory = [this](const std::string& targetDirectory) {
         Status status = fileManager->changeDirectory(targetDirectory);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onListFiles = [this](bool sortSize, bool sortTime) {
@@ -36,7 +36,6 @@ void Controller::setupBindings()
         std::vector<FileInfo> files;
         Status status = fileManager->listFiles(sortMode, files);
         if (status.ok()) {
-            std::string output;
             tabulate::Table fileTable;
             fileTable.add_row({"Name", "Type", "Size (bytes)", "Last Modified"});
 
@@ -65,51 +64,59 @@ void Controller::setupBindings()
                      .format()
                      .font_color(tabulate::Color::yellow);
             fileTable.print(std::cout);
-            outputMsgCur = output;
         } else {
-            outputMsgCur = status.message + "\n";
+            fmt::print("{}\n", status.message);
         }
     };
 
     commandParser->onCopy = [this](const std::string& sourcePath, const std::string& targetPath) {
         Status status = fileManager->copyItem(sourcePath, targetPath);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onTouchFile = [this](const std::string& path) {
         Status status = fileManager->createFile(path);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onMakeDirectory = [this](const std::string& path) {
         Status status = fileManager->createDirectory(path);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onRemove = [this](const std::string& path) {
         Status status = fileManager->removePath(path);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onRemoveDirectory = [this](const std::string& path) {
         Status status = fileManager->removePath(path);
-        outputMsgCur = status.ok() ? "" : status.message + "\n";
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
     };
 
     commandParser->onStat = [this](const std::string& path) {
         FileInfo info;
         Status status = fileManager->getFileStat(path, info);
         if (status.ok()) {
-            std::string output = fmt::format(
-                "Name: {}\nType: {}\nSize: {} bytes\nLast Modified: {}",
+            fmt::print(
+                "Name: {}\nType: {}\nSize: {} bytes\nLast Modified: {}\n",
                 info.name,
                 (info.type == FileType::Directory) ? "Directory" : (info.type == FileType::File) ? "File" : "Unknown",
                 info.size,
                 fileTimeToString(info.modifyTime)
             );
-            outputMsgCur = output + "\n";
         } else {
-            outputMsgCur = status.message + "\n";
+            fmt::print("{}\n", status.message);
         }
     };
 
@@ -117,14 +124,15 @@ void Controller::setupBindings()
         std::vector<FileInfo> results;
         Status status = fileManager->search(keyword, results);
         if (status.ok()) {
-            std::string output;
-            for (const auto& file : results) {
-                output += fmt::format("{}\n", file.path.string());
+            if (results.empty()) {
+                fmt::print("No files found.\n");
+            } else {
+                for (const auto& file : results) {
+                    fmt::print("{}\n", file.path.string());
+                }
             }
-            if (output.empty()) output = "No files found.\n";
-            outputMsgCur = output;
         } else {
-            outputMsgCur = status.message + "\n";
+            fmt::print("{}\n", status.message);
         }
     };
 
@@ -132,21 +140,19 @@ void Controller::setupBindings()
         uintmax_t size;
         Status status = fileManager->calculateDirSize(path, size);
         if (status.ok()) {
-            outputMsgCur = fmt::format("Size: {} bytes\n", size);
+            fmt::print("Size: {} bytes\n", size);
         } else {
-            outputMsgCur = status.message + "\n";
+            fmt::print("{}\n", status.message);
         }
     };
 
     commandParser->onExit = [this]() {
-        outputMsgCur = "Exiting shell...\n";
+        fmt::print("Exiting shell...\n");
     };
 }
 
-void Controller::parse(const std::string& inputLine, std::string& outputMessage) {
-    outputMsgCur = ""; // Clear previous output
+void Controller::parse(const std::string& inputLine) {
     commandParser->process(inputLine);
-    outputMessage = outputMsgCur;
 }
 
 std::string Controller::fileTimeToString(const std::filesystem::file_time_type& ftime) {

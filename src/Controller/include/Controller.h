@@ -7,7 +7,6 @@ class Controller {
 public:
     std::shared_ptr<FileManager> fileManager;
     std::shared_ptr<CommandParser> commandParser;
-    static std::string outputMsgCur;
 
 public:
     Controller();
@@ -15,5 +14,5 @@ public:
 
     void setupBindings();
     std::string fileTimeToString(const std::filesystem::file_time_type& ftime);
-    void parse(const std::string& inputLine, std::string& outputMessage);
+    void parse(const std::string& inputLine);
 };

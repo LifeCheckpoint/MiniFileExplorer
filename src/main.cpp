@@ -50,9 +50,7 @@ int main() {
         if (val == "exit") break;
         
         // Parse commands
-        std::string output;
-        controller.parse(val, output);
-        fmt::print("{}", output);
+        controller.parse(val);
     }
 
     return 0;
