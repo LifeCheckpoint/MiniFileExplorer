@@ -25,7 +25,7 @@ int main() {
 
     int line_count = 1;
     fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold, "Mini File Explorer Demo\n");
-    fmt::print(fg(fmt::color::red) | fmt::emphasis::bold, "Created by LifeCheckpoint, LightningHonor.\n");
+    fmt::print(fg(fmt::color::green) | fmt::emphasis::bold, "Created by LifeCheckpoint, LightningHonor.\n");
 
     Controller controller;
 
