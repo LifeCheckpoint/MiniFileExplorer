@@ -1,15 +1,20 @@
-#pragma once
 #include <status.h>
 
-struct Status
+Status::Status(StatusCode c, std::string msg)
+    : code(c), message(std::move(msg))
+{}
+
+bool Status::ok() const
 {
-    StatusCode code;
-    std::string message;
+    return code == StatusCode::Success;
+}
 
-    Status(StatusCode c = StatusCode::Success, std::string msg = "") : code(c), message(msg) {}
+Status Status::Success()
+{
+    return Status(StatusCode::Success);
+}
 
-    bool ok() const { return code == StatusCode::Success; }
-
-    static Status Success() { return Status(StatusCode::Success); }
-    static Status Error(StatusCode c, const std::string &msg) { return Status(c, msg); }
-};
+Status Status::Error(StatusCode c, const std::string &msg)
+{
+    return Status(c, msg);
+}

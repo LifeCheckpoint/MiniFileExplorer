@@ -6,6 +6,8 @@ add_executable(MiniFileExplorer main.cpp)
 target_link_libraries(MiniFileExplorer PUBLIC
     FileManager
     Models
+    CommandParser
+    Controller
 )
 
 target_link_libraries(MiniFileExplorer PUBLIC
