@@ -5,6 +5,7 @@
 #include "replxx.hxx"
 #include <fmt/core.h>
 #include <fmt/color.h>
+#include "Controller.h"
 
 int main() {
     replxx::Replxx rx;
@@ -26,6 +27,8 @@ int main() {
     fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold, "Mini File Explorer Demo\n");
     fmt::print(fg(fmt::color::red) | fmt::emphasis::bold, "Created by LifeCheckpoint, LightningHonor.\n");
 
+    Controller controller;
+
     while (true) {
         std::string prompt = fmt::format("\033[1;34m[{}]\033[0m myapp> ", line_count); // blue
         const char* input = rx.input(prompt);
@@ -40,8 +43,11 @@ int main() {
         line_count++;
 
         if (val == "exit") break;
-        fmt::print(fg(fmt::color::crimson), "Error simulation: Command '{}' not found (fake)\n", val);
-        fmt::print("Stats: [Length: {0}] [First char: {1}]\n", val.length(), val[0]);
+        
+        // Parse commands
+        std::string output;
+        controller.parse(val, output);
+        fmt::print("{}", output);
     }
 
     return 0;
