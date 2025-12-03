@@ -154,5 +154,5 @@ private:
         app.add_subcommand("exit", "Exit shell")->callback([this](){
             if (onExit) onExit();
         });
-        }
-    };
+    }
+};
