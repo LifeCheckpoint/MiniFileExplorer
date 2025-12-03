@@ -30,7 +30,12 @@ int main() {
     Controller controller;
 
     while (true) {
-        std::string prompt = fmt::format("\033[1;34m[{}]\033[0m myapp> ", line_count); // blue
+        Path cur_path;
+        controller.fileManager->getCurrentPath(cur_path);
+        if (!cur_path.has_filename()) {
+            cur_path = cur_path.parent_path();
+        }
+        std::string prompt = fmt::format("\033[1;34m[{}]\033[0m {}> ", line_count, cur_path.filename().string()); // Blue
         const char* input = rx.input(prompt);
 
         // EOF / ^D
