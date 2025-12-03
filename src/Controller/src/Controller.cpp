@@ -113,12 +113,38 @@ void Controller::setupBindings()
         }
     };
 
+    commandParser->onSearch = [this](const std::string& keyword) {
+        std::vector<FileInfo> results;
+        Status status = fileManager->search(keyword, results);
+        if (status.ok()) {
+            std::string output;
+            for (const auto& file : results) {
+                output += fmt::format("{}\n", file.path.string());
+            }
+            if (output.empty()) output = "No files found.\n";
+            outputMsgCur = output;
+        } else {
+            outputMsgCur = status.message + "\n";
+        }
+    };
+
+    commandParser->onDiskUsage = [this](const std::string& path) {
+        uintmax_t size;
+        Status status = fileManager->calculateDirSize(path, size);
+        if (status.ok()) {
+            outputMsgCur = fmt::format("Size: {} bytes\n", size);
+        } else {
+            outputMsgCur = status.message + "\n";
+        }
+    };
+
     commandParser->onExit = [this]() {
         outputMsgCur = "Exiting shell...\n";
     };
 }
 
 void Controller::parse(const std::string& inputLine, std::string& outputMessage) {
+    outputMsgCur = ""; // Clear previous output
     commandParser->process(inputLine);
     outputMessage = outputMsgCur;
 }
