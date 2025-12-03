@@ -28,4 +28,8 @@ FetchContent_MakeAvailable(tabulate)
 FetchContent_Declare(replxx GIT_REPOSITORY https://github.com/GerHobbelt/replxx.git GIT_TAG 97a5401)
 FetchContent_MakeAvailable(replxx)
 
+# CLI11
+FetchContent_Declare(CLI11 GIT_REPOSITORY https://github.com/CLIUtils/CLI11 GIT_TAG v2.6.1)
+FetchContent_MakeAvailable(CLI11)
+
 add_subdirectory(src)
