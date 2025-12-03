@@ -18,6 +18,9 @@ public:
     
     // cp
     std::function<void(const std::string &sourcePath, const std::string &targetPath)> onCopy;
+
+    // mv
+    std::function<void(const std::string &sourcePath, const std::string &targetPath)> onMove;
     
     // touch
     std::function<void(const std::string &path)> onTouchFile;
@@ -107,6 +110,14 @@ private:
         cmd_cp->add_option("dst", temp_path_dst, "Dest")->required();
         cmd_cp->callback([this]() {
             if (onCopy) onCopy(temp_path_src, temp_path_dst);
+        });
+
+        // mv
+        auto cmd_mv = app.add_subcommand("mv", "Move file");
+        cmd_mv->add_option("src", temp_path_src, "Source")->required();
+        cmd_mv->add_option("dst", temp_path_dst, "Dest")->required();
+        cmd_mv->callback([this]() {
+            if (onMove) onMove(temp_path_src, temp_path_dst);
         });
 
         // touch

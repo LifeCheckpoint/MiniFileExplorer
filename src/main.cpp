@@ -12,7 +12,7 @@ int main() {
     rx.install_window_change_handler();
 
     // auto-completion keywords
-    std::vector<std::string> keywords = {"cd", "ls", "cp", "touch", "mkdir", "rm", "rmdir", "stat", "search", "du", "exit"};
+    std::vector<std::string> keywords = {"cd", "ls", "cp", "mv", "touch", "mkdir", "rm", "rmdir", "stat", "search", "du", "exit"};
     rx.set_completion_callback([&](std::string const& context, int& contextLen) {
         replxx::Replxx::completions_t completions;
         std::string prefix = context.substr(context.find_last_of(" \t") + 1);

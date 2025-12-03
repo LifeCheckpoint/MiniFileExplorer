@@ -76,6 +76,13 @@ void Controller::setupBindings()
         }
     };
 
+    commandParser->onMove = [this](const std::string& sourcePath, const std::string& targetPath) {
+        Status status = fileManager->moveItem(sourcePath, targetPath);
+        if (!status.ok()) {
+            fmt::print("{}\n", status.message);
+        }
+    };
+
     commandParser->onTouchFile = [this](const std::string& path) {
         Status status = fileManager->createFile(path);
         if (!status.ok()) {
