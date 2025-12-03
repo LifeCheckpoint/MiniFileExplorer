@@ -11,6 +11,8 @@
 
 using Path = std::filesystem::path;
 
+std::string Controller::outputMsgCur;
+
 Controller::Controller() {
     fileManager = std::make_shared<FileManager>();
     commandParser = std::make_shared<CommandParser>();
@@ -123,6 +125,13 @@ void Controller::parse(const std::string& inputLine, std::string& outputMessage)
 
 std::string Controller::fileTimeToString(const std::filesystem::file_time_type& ftime) {
     auto sys_time = std::chrono::file_clock::to_sys(ftime);
-    auto local_time = std::chrono::zoned_time{std::chrono::current_zone(), sys_time};
-    return fmt::format("{:%Y-%m-%d %H:%M:%S}\n", local_time);
+    auto time_t_val = std::chrono::system_clock::to_time_t(sys_time);
+    auto local_tm = *std::localtime(&time_t_val);
+    return fmt::format("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}\n",
+                       local_tm.tm_year + 1900,
+                       local_tm.tm_mon + 1,
+                       local_tm.tm_mday,
+                       local_tm.tm_hour,
+                       local_tm.tm_min,
+                       local_tm.tm_sec);
 }
