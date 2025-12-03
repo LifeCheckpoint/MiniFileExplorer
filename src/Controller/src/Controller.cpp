@@ -23,8 +23,10 @@ void Controller::setupBindings()
 {
     commandParser->onChangeDirectory = [this](const std::string& targetDirectory) {
         Status status = fileManager->changeDirectory(targetDirectory);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Directory changed.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
@@ -65,49 +67,61 @@ void Controller::setupBindings()
                      .font_color(tabulate::Color::yellow);
             fileTable.print(std::cout);
         } else {
-            fmt::print("{}\n", status.message);
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onCopy = [this](const std::string& sourcePath, const std::string& targetPath) {
         Status status = fileManager->copyItem(sourcePath, targetPath);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Item copied.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onMove = [this](const std::string& sourcePath, const std::string& targetPath) {
         Status status = fileManager->moveItem(sourcePath, targetPath);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Item moved.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onTouchFile = [this](const std::string& path) {
         Status status = fileManager->createFile(path);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: File created.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onMakeDirectory = [this](const std::string& path) {
         Status status = fileManager->createDirectory(path);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Directory created.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onRemove = [this](const std::string& path) {
         Status status = fileManager->removePath(path);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Item removed.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
     commandParser->onRemoveDirectory = [this](const std::string& path) {
         Status status = fileManager->removePath(path);
-        if (!status.ok()) {
-            fmt::print("{}\n", status.message);
+        if (status.ok()) {
+            fmt::print(fg(fmt::color::green), "Success: Directory removed.\n");
+        } else {
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
@@ -123,7 +137,7 @@ void Controller::setupBindings()
                 fileTimeToString(info.modifyTime)
             );
         } else {
-            fmt::print("{}\n", status.message);
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
@@ -139,7 +153,7 @@ void Controller::setupBindings()
                 }
             }
         } else {
-            fmt::print("{}\n", status.message);
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
@@ -149,7 +163,7 @@ void Controller::setupBindings()
         if (status.ok()) {
             fmt::print("Size: {} bytes\n", size);
         } else {
-            fmt::print("{}\n", status.message);
+            fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
     };
 
