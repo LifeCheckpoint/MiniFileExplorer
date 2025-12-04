@@ -1,0 +1,64 @@
+迷你版本地文件管理器开发项目
+基本信息
+组队人数: 1~2 人
+答疑联系：陈璟文 12532511@mail.sustech.edu.cn
+项目简介
+在数字化时代，文件系统是操作系统与用户交互的核心桥梁，无论是日常办公的文档管理，还是开发过程中的代码文件组织，都依赖高效的文件操作工具。本项目要求开发一款基于终端的迷你文件管理器 (MiniFileExplorer)，支持类似 Linux 的文件浏览、创建、删除、搜索等核心操作。
+项目要求与实现细节
+基础要求 (80 分)
+目录初始化与切换 (25 分)
+启动初始化 (10 分)
+程序启动时默认加载当前工作目录 (通过 getcwd () 函数获取)，并在终端显示当前目录路径 (格式：Current Directory: /home/user/project)。
+支持启动时通过命令行参数指定初始目录，如./MiniFileExplorer/home/user/docs，若指定目录不存在，提示 “Directory not found: /home/user/docs” 并退出。
+目录切换操作 (15 分)
+支持输入 cd [目录路径] 切换目录 (如 cd ../.. 切换到上级的上级目录、cd ./test 切换到当前目录下的 test 子目录)。
+切换时校验目录合法性：若目标目录不存在，提示 “Invalid directory: [目标路径]”；若目标路径是文件而非目录，提示 “Not a directory: [目标路径]”。
+支持输入 cd ~ 快速切换到当前用户的主目录 (Linux 下为 /home/[用户名])。
+文件 / 文件夹基础操作 (30 分)
+文件 / 文件夹创建 (10 分)
+输入 touch [文件名] 创建空文件 (如 touch note.txt)，若文件已存在，提示 “File already exists: note.txt”。
+输入 mkdir [文件夹名] 创建空文件夹 (如 mkdir data)，若文件夹已存在，提示 “Directory already exists: data”。
+文件 / 文件夹删除 (10 分)
+输入 rm [文件名] 删除指定文件，删除前需二次确认 (提示 “Are you sure to delete [文件名]? (y/n)”)，仅输入 “y” 时执行删除，其他输入取消操作。
+输入 rmdir [文件夹名] 删除指定空文件夹，若文件夹非空，提示 “Directory not empty: [文件夹名]”；若文件夹不存在，提示 “Directory not found: [文件夹名]”。
+目录内容列表展示 (10 分)
+输入 ls 时，以列表形式展示当前目录下的所有文件和文件夹，区分显示类型 (文件夹名后加 /，如 data/；文件名正常显示，如 note.txt)。
+列表需包含 “名称、类型、大小 (字节)、修改时间”4 列，格式对齐 (示例如下):
+Name	Type	Size(B)	Modify Time
+data/	Dir		2024-05-20 14:30:00
+note.txt	File	1024	2024-05-20 15:10:23
+终端交互与信息查询 (25 分)
+命令交互与帮助 (10 分)
+程序启动后显示命令提示：Enter command (type 'help' for all commands): ，支持持续输入命令。
+输入 help 时，列出所有支持的命令及说明 (如 cd [path]: Switch to target directory、ls: List all files and directories)。
+输入 exit 时，退出程序并提示 “MiniFileExplorer closed successfully”。
+文件信息查询 (15 分)
+输入 stat [文件名 / 文件夹名] 时，显示目标的详细信息：类型 (文件 / 文件夹)、路径、大小 (文件为字节数，文件夹为 “-”)、创建时间、修改时间、访问时间。
+若目标不存在，提示 “Target not found: [目标名]”；若输入时未指定目标 (仅输入 stat)，提示 “Missing target: Please enter'stat [name]'”。
+进阶要求 (最高 40 分)
+文件搜索功能 (10 分)
+输入 search [关键词] 时，在当前目录及其所有子目录中，搜索名称包含关键词的文件和文件夹 (不区分大小写)。
+搜索结果按 “路径、类型” 展示，如:
+Search results for 'note' (2 items):
+/home/user/docs/note.txt (File)
+/home/user/data/old_note/ (Dir)
+若未找到匹配结果，提示 “No results found for '[关键词]'”。
+文件复制与移动 (15 分)
+文件复制：输入 cp [源文件路径] [目标路径]，将源文件复制到目标路径 (如 cp ./note.txt ../backup/)，若目标路径已存在同名文件，提示 “File exists in target: Overwrite? (y/n)”，输入 “y” 则覆盖。
+文件移动：输入 mv [源文件 / 文件夹路径] [目标路径]，将源目标移动到新路径 (如 mv ./data ../archive/)，支持重命名 (如 mv note.txt new_note.txt，将当前目录的 note.txt 重命名为 new_note.txt)。
+操作时校验合法性：源目标不存在则提示 “Source not found”，目标路径非法则提示 “Invalid target path”。
+目录大小计算与排序 (15 分)
+目录大小计算：输入 du [文件夹名] 时，计算该文件夹及其所有子文件的总大小 (单位：KB/MB，自动适配，如总大小 1024 字节显示为 “1 KB”，总大小 2048000 字节显示为 “2 MB”)，并提示 “Total size of [文件夹名]: 5 MB”。
+列表排序：输入 ls -s 时，按文件 / 文件夹大小降序排列 (文件夹按子文件总大小计算，空文件夹排在最后)；输入 ls -t 时，按修改时间降序排列 (最新修改的排在最前)，排序后仍保持 “名称、类型、大小、修改时间” 的列对齐格式。
+评分标准
+分类	评分细则	分值
+基础要求 (80 分)	目录初始化与切换 (启动目录加载、命令行参数支持、cd 命令合法性校验)	25 分
+文件 / 文件夹基础操作 (touch/mkdir 创建、rm/rmdir 删除、ls 列表展示)	30 分
+终端交互与信息查询 (help/exit 命令、stat 详细信息查询、错误提示友好性)	25 分
+进阶要求 (最高 40 分)	文件搜索 (关键词匹配、子目录遍历、结果展示)	10 分
+文件复制与移动 (cp/mv 命令实现、覆盖确认、路径合法性校验)	15 分
+目录大小计算与排序 (du 命令大小统计、ls -s/-t 排序、单位适配)	15 分
+文档要求	设计思路清晰、功能说明完整、问题解决有逻辑	额外 5 分
+提交要求
+源代码：项目相关的所有源文件
+项目文档：一个简洁明了的文档，里面包括你实现的功能的用途和用法。
