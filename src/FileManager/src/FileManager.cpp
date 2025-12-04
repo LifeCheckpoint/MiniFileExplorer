@@ -9,7 +9,7 @@ FileManager::FileManager() {
 }
 
 // 析构函数
-FileManager::~FileManager() {
+FileManager::~FileManager() {//释放声明的内存
     // 占位实现，无需清理
 }
 
@@ -135,7 +135,9 @@ Status FileManager::createFile(const std::string& filename) {
 // 创建文件（指定路径）
 Status FileManager::createFile(const Path& filePath) {
     // 占位实现：模拟成功
+    //if suucess
     return Status::Success();
+    //if error
 }
 
 // 创建文件夹（在当前目录）

@@ -1,7 +1,7 @@
-#pragma once
+#pragma once//预处理指令，用于防止头文件被重复包含
 #include <string>
 
-enum class StatusCode
+enum class StatusCode//show the error information
 {
     Success = 0,
 
@@ -17,8 +17,8 @@ enum class StatusCode
     PermissionDenied,  // 权限不足
     NotEmpty,          // 文件夹非空 (rmdir时)
 
-    CopyFailed,
-    MoveFailed
+    CopyFailed,//拷贝失败
+    MoveFailed//移动失败
 };
 
 struct Status
