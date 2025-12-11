@@ -27,6 +27,7 @@ FileManager::FileManager(const std::string& initPath) {
 // 析构函数
 FileManager::~FileManager() {//释放声明的内存
     // 占位实现，无需清理
+    // relieve the memory which newed out of stack or function
 }
 
 // 获取当前工作目录
@@ -36,9 +37,36 @@ Status FileManager::getCurrentPath(Path& workingPath) const {
 }
 
 // 切换工作目录
-Status FileManager::changeDirectory(const Path& workingPath) {
-    // 占位实现：简单更新路径
-    currentPath = workingPath;
+Status FileManager::changeDirectory(const Path& targetPath) {
+    fs::path newPath;
+
+    // 处理 cd ~（切换到用户主目录）
+    if (targetPath.string() == "~") {
+        const char* homeDir = getenv("HOME");
+        if (!homeDir) {
+            struct passwd* pwd = getpwuid(getuid());
+            if (!pwd) {
+                return Status::Error(StatusCode::PathNotFound, "Failed to get home directory");
+            }
+            homeDir = pwd->pw_dir;
+        }
+        newPath = fs::path(homeDir);
+    } else {
+        // 处理相对路径/绝对路径
+        newPath = targetPath.is_absolute() ? targetPath : currentPath / targetPath;
+        newPath = newPath.lexically_normal(); // 规范化路径（消除 ./ 和 ../）
+    }
+
+    // 校验目录合法性
+    if (!fs::exists(newPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Invalid directory: " + newPath.string());
+    }
+    if (!fs::is_directory(newPath)) {
+        return Status::Error(StatusCode::NotADirectory, "Not a directory: " + newPath.string());
+    }
+
+    // 切换成功
+    currentPath = newPath;
     return Status::Success();
 }
 
