@@ -91,97 +91,92 @@ uintmax_t FileManager::calculateDirTotalSize(const Path& dirPath) const {
     return totalSize;
 }
 
-// 列出当前工作目录下的所有文件
+// 列出当前目录文件（支持按大小/时间排序）
 Status FileManager::listFiles(SortMode sortMode, std::vector<FileInfo>& outFiles) const {
     outFiles.clear();
-    
-    // 创建一些模拟文件数据
-    std::vector<FileInfo> mockFiles = {
-        {
-            "project.txt",
-            currentPath / "project.txt",
-            FileType::File,
-            2048,
-            std::filesystem::file_time_type::clock::now()
-        },
-        {
-            "data",
-            currentPath / "data",
-            FileType::Directory,
-            0,
-            std::filesystem::file_time_type::clock::now() - std::chrono::hours(24)
-        },
-        {
-            "readme.md",
-            currentPath / "readme.md",
-            FileType::File,
-            1024,
-            std::filesystem::file_time_type::clock::now() - std::chrono::hours(2)
-        },
-        {
-            "config.json",
-            currentPath / "config.json",
-            FileType::File,
-            512,
-            std::filesystem::file_time_type::clock::now() - std::chrono::hours(48)
-        },
-        {
-            "backup",
-            currentPath / "backup",
-            FileType::Directory,
-            0,
-            std::filesystem::file_time_type::clock::now() - std::chrono::hours(72)
+
+    // 遍历当前目录
+    try {
+        for (const auto& entry : fs::directory_iterator(currentPath)) {
+            FileInfo info;
+            info.name = entry.path().filename().string();
+            info.path = entry.path();
+            info.type = entry.is_directory() ? FileType::Directory : FileType::File;
+            info.modifyTime = entry.last_write_time();
+
+            // 设置大小（文件：字节数；目录：-，排序时用总大小）
+            if (info.type == FileType::File) {
+                info.size = entry.file_size();
+            } else {
+                info.size = 0; // 列表显示为 "-"，排序时单独处理
+                info.dirTotalSize = calculateDirTotalSize(entry.path());
+            }
+
+            outFiles.push_back(info);
         }
-    };
-    
+    } catch (const fs::filesystem_error& e) {
+        return Status::Error(StatusCode::PermissionDenied, "Permission denied: " + std::string(e.what()));
+    }
+
     // 根据排序模式排序
     switch (sortMode) {
         case SortMode::BySize:
-            std::sort(mockFiles.begin(), mockFiles.end(), 
+            // 按大小降序：文件用自身大小，目录用总大小，空目录排最后
+            std::sort(outFiles.begin(), outFiles.end(),
                 [](const FileInfo& a, const FileInfo& b) {
-                    return a.size > b.size;
+                    uintmax_t sizeA = (a.type == FileType::File) ? a.size : a.dirTotalSize;
+                    uintmax_t sizeB = (b.type == FileType::File) ? b.size : b.dirTotalSize;
+                    return sizeA > sizeB;
                 });
             break;
         case SortMode::ByTime:
-            std::sort(mockFiles.begin(), mockFiles.end(),
+            // 按修改时间降序（最新在前）
+            std::sort(outFiles.begin(), outFiles.end(),
                 [](const FileInfo& a, const FileInfo& b) {
                     return a.modifyTime > b.modifyTime;
                 });
             break;
         case SortMode::Default:
         default:
-            // 保持默认顺序
+            // 默认按名称字典序排序
+            std::sort(outFiles.begin(), outFiles.end(),
+                [](const FileInfo& a, const FileInfo& b) {
+                    return a.name < b.name;
+                });
             break;
     }
-    
-    outFiles = mockFiles;
+
     return Status::Success();
 }
 
-// 获取文件详细信息
 Status FileManager::getFileStat(const std::string& targetName, FileInfo& outInfo) const {
-    // 模拟查找文件
-    if (targetName == "project.txt") {
-        outInfo = {
-            "project.txt",
-            currentPath / "project.txt",
-            FileType::File,
-            2048,
-            std::filesystem::file_time_type::clock::now()
-        };
-        return Status::Success();
-    } else if (targetName == "data") {
-        outInfo = {
-            "data",
-            currentPath / "data",
-            FileType::Directory,
-            4096,
-            std::filesystem::file_time_type::clock::now() - std::chrono::hours(24)
-        };
-        return Status::Success();
+    if (targetName.empty()) {
+        return Status::Error(StatusCode::InvalidArguments, "Missing target: Please enter 'stat [name]'");
     }
-    
-    return Status::Error(StatusCode::PathNotFound, "文件不存在: " + targetName);
+
+    fs::path targetPath = currentPath / targetName;
+    if (!fs::exists(targetPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Target not found: " + targetName);
+    }
+
+    // 填充文件信息
+    outInfo.name = targetPath.filename().string();
+    outInfo.path = targetPath;
+    outInfo.type = fs::is_directory(targetPath) ? FileType::Directory : FileType::File;
+    outInfo.modifyTime = fs::last_write_time(targetPath);
+
+    // 大小：文件为字节数，目录为 "-"
+    if (outInfo.type == FileType::File) {
+        outInfo.size = fs::file_size(targetPath);
+    } else {
+        outInfo.size = 0; // 显示时替换为 "-"
+    }
+
+    // 补充创建时间和访问时间（Linux 下需额外处理，这里简化）
+    outInfo.createTime = fs::last_write_time(targetPath); // 实际应获取创建时间
+    outInfo.accessTime = fs::last_write_time(targetPath); // 实际应获取访问时间
+
+    return Status::Success();
 }
 
 // 计算文件夹大小
