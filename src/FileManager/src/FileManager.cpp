@@ -179,11 +179,26 @@ Status FileManager::getFileStat(const std::string& targetName, FileInfo& outInfo
     return Status::Success();
 }
 
-// 计算文件夹大小
+// 计算文件夹总大小（du 命令，自动适配 KB/MB）
 Status FileManager::calculateDirSize(const Path& dirPath, uintmax_t& outSize) const {
-    // 模拟返回固定大小
-    outSize = 1024 * 1024; // 1MB
+    fs::path targetPath = dirPath.is_absolute() ? dirPath : currentPath / dirPath;
+
+    // 校验目录合法性
+    if (!fs::exists(targetPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Directory not found: " + targetPath.string());
+    }
+    if (!fs::is_directory(targetPath)) {
+        return Status::Error(StatusCode::NotADirectory, "Not a directory: " + targetPath.string());
+    }
+
+    // 递归计算总大小
+    outSize = calculateDirTotalSize(targetPath);
     return Status::Success();
+}
+
+// 辅助函数：检查文件/目录是否已存在
+bool FileManager::pathExists(const Path& targetPath) const {
+    return fs::exists(targetPath);
 }
 
 // 创建文件（在当前目录）
