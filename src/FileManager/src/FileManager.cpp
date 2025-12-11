@@ -70,6 +70,27 @@ Status FileManager::changeDirectory(const Path& targetPath) {
     return Status::Success();
 }
 
+// 辅助函数：文件时间转换为字符串（格式：YYYY-MM-DD HH:MM:SS）
+std::string FileManager::fileTimeToString(const fs::file_time_type& fileTime) const {
+    auto sysTime = fs::file_clock::to_sys(fileTime);
+    auto timeT = system_clock::to_time_t(sysTime);
+    std::tm tm = *std::localtime(&timeT);
+    std::stringstream ss;
+    ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+    return ss.str();
+}
+
+// 辅助函数：计算目录总大小（递归包含子文件）
+uintmax_t FileManager::calculateDirTotalSize(const Path& dirPath) const {
+    uintmax_t totalSize = 0;
+    for (const auto& entry : fs::recursive_directory_iterator(dirPath)) {
+        if (entry.is_regular_file()) {
+            totalSize += entry.file_size();
+        }
+    }
+    return totalSize;
+}
+
 // 列出当前工作目录下的所有文件
 Status FileManager::listFiles(SortMode sortMode, std::vector<FileInfo>& outFiles) const {
     outFiles.clear();
