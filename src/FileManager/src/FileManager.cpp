@@ -3,11 +3,27 @@
 #include <sstream>
 
 // 构造函数
-FileManager::FileManager() {
+FileManager::FileManager(const std::string& initPath) {
     // 初始化为模拟的默认路径
-    currentPath = "/home/user/documents";
+    if (initPath.empty()) {
+        // 默认加载当前工作目录（getcwd）
+        char buf[PATH_MAX];
+        if (getcwd(buf, sizeof(buf)) != nullptr) {
+            currentPath = fs::path(buf);
+        } else {
+            currentPath = "/home/user/documents"
+            throw std::runtime_error("Failed to get current working directory,set at address /home/user/documents");
+        }
+    } else {
+        // 命令行参数指定初始目录
+        fs::path targetPath(initPath);
+        if (fs::exists(targetPath) && fs::is_directory(targetPath)) {
+            currentPath = targetPath;
+        } else {
+            throw std::runtime_error("Directory not found: " + initPath);
+        }
+    }
 }
-
 // 析构函数
 FileManager::~FileManager() {//释放声明的内存
     // 占位实现，无需清理
