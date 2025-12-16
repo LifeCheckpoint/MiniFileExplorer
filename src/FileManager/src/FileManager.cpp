@@ -201,29 +201,85 @@ bool FileManager::pathExists(const Path& targetPath) const {
     return fs::exists(targetPath);
 }
 
-// 创建文件（在当前目录）
+// 创建文件（touch 命令）
 Status FileManager::createFile(const std::string& filename) {
-    // 占位实现：模拟成功
+    if (filename.empty()) {
+        return Status::Error(StatusCode::InvalidArguments, "Missing filename: Please enter 'touch [filename]'");
+    }
+
+    fs::path filePath = currentPath / filename;
+    if (pathExists(filePath)) {
+        return Status::Error(StatusCode::PathAlreadyExists, "File already exists: " + filename);
+    }
+
+    // 创建空文件
+    std::ofstream file(filePath);
+    if (!file.is_open()) {
+        return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot create file " + filename);
+    }
+    file.close();
+
     return Status::Success();
 }
 
-// 创建文件（指定路径）
+// 创建文件（指定路径重载）
 Status FileManager::createFile(const Path& filePath) {
-    // 占位实现：模拟成功
-    //if suucess
+    fs::path targetPath = filePath.is_absolute() ? filePath : currentPath / filePath;
+    if (pathExists(targetPath)) {
+        return Status::Error(StatusCode::PathAlreadyExists, "File already exists: " + targetPath.string());
+    }
+
+    // 创建父目录（如果不存在）
+    fs::path parentDir = targetPath.parent_path();
+    if (!fs::exists(parentDir)) {
+        fs::create_directories(parentDir);
+    }
+
+    // 创建空文件
+    std::ofstream file(targetPath);
+    if (!file.is_open()) {
+        return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot create file " + targetPath.string());
+    }
+    file.close();
+
     return Status::Success();
-    //if error
 }
 
-// 创建文件夹（在当前目录）
+// 创建文件夹（mkdir 命令）
 Status FileManager::createDirectory(const std::string& dirname) {
-    // 占位实现：模拟成功
+    if (dirname.empty()) {
+        return Status::Error(StatusCode::InvalidArguments, "Missing directory name: Please enter 'mkdir [dirname]'");
+    }
+
+    fs::path dirPath = currentPath / dirname;
+    if (pathExists(dirPath)) {
+        return Status::Error(StatusCode::PathAlreadyExists, "Directory already exists: " + dirname);
+    }
+
+    // 创建文件夹
+    try {
+        fs::create_directory(dirPath);
+    } catch (const fs::filesystem_error& e) {
+        return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot create directory " + dirname);
+    }
+
     return Status::Success();
 }
 
-// 创建文件夹（指定路径）
+// 创建文件夹（指定路径重载）
 Status FileManager::createDirectory(const Path& dirPath) {
-    // 占位实现：模拟成功
+    fs::path targetPath = dirPath.is_absolute() ? dirPath : currentPath / dirPath;
+    if (pathExists(targetPath)) {
+        return Status::Error(StatusCode::PathAlreadyExists, "Directory already exists: " + targetPath.string());
+    }
+
+    // 创建文件夹（递归创建父目录）
+    try {
+        fs::create_directories(targetPath);
+    } catch (const fs::filesystem_error& e) {
+        return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot create directory " + targetPath.string());
+    }
+
     return Status::Success();
 }
 
