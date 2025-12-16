@@ -283,16 +283,86 @@ Status FileManager::createDirectory(const Path& dirPath) {
     return Status::Success();
 }
 
-// 删除文件或文件夹（在当前目录）
+// 删除文件/目录（rm/rmdir 命令）
 Status FileManager::removePath(const std::string& targetName) {
-    // 占位实现：模拟成功
-    return Status::Success();
+    if (targetName.empty()) {
+        return Status::Error(StatusCode::InvalidArguments, "Missing target: Please enter 'rm [filename]' or 'rmdir [dirname]'");
+    }
+
+    fs::path targetPath = currentPath / targetName;
+    if (!fs::exists(targetPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Target not found: " + targetName);
+    }
+
+    // 区分文件和目录
+    if (fs::is_regular_file(targetPath)) {
+        // 删除文件：二次确认
+        std::cout << "Are you sure to delete " << targetName << "? (y/n) ";
+        char choice;
+        std::cin >> choice;
+        if (choice != 'y' && choice != 'Y') {
+            return Status::Success("Delete cancelled");
+        }
+
+        try {
+            fs::remove(targetPath);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot delete file " + targetName);
+        }
+    } else if (fs::is_directory(targetPath)) {
+        // 删除目录：仅允许空目录（rmdir 逻辑）
+        if (!fs::is_empty(targetPath)) {
+            return Status::Error(StatusCode::NotEmpty, "Directory not empty: " + targetName);
+        }
+
+        try {
+            fs::remove(targetPath);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot delete directory " + targetName);
+        }
+    } else {
+        return Status::Error(StatusCode::UnknownError, "Unsupported target type: " + targetName);
+    }
+
+    return Status::Success("Delete successfully");
 }
 
-// 删除文件或文件夹（指定路径）
+// 删除文件/目录（指定路径重载）
 Status FileManager::removePath(const Path& targetPath) {
-    // 占位实现：模拟成功
-    return Status::Success();
+    fs::path absPath = targetPath.is_absolute() ? targetPath : currentPath / targetPath;
+    if (!fs::exists(absPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Target not found: " + absPath.string());
+    }
+
+    if (fs::is_regular_file(absPath)) {
+        // 删除文件：二次确认
+        std::cout << "Are you sure to delete " << absPath.filename().string() << "? (y/n) ";
+        char choice;
+        std::cin >> choice;
+        if (choice != 'y' && choice != 'Y') {
+            return Status::Success("Delete cancelled");
+        }
+
+        try {
+            fs::remove(absPath);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot delete file " + absPath.string());
+        }
+    } else if (fs::is_directory(absPath)) {
+        if (!fs::is_empty(absPath)) {
+            return Status::Error(StatusCode::NotEmpty, "Directory not empty: " + absPath.string());
+        }
+
+        try {
+            fs::remove(absPath);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::PermissionDenied, "Permission denied: Cannot delete directory " + absPath.string());
+        }
+    } else {
+        return Status::Error(StatusCode::UnknownError, "Unsupported target type: " + absPath.string());
+    }
+
+    return Status::Success("Delete successfully");
 }
 
 // 复制
