@@ -457,53 +457,46 @@ Status FileManager::moveItem(const Path& src, const Path& dst) {
     return Status::Success("Move successfully");
 }
 
-// 搜索（在当前目录）
+// 搜索文件/目录（不区分大小写，递归子目录）
 Status FileManager::search(const std::string& keyword, std::vector<FileInfo>& outResults) const {
     return search(currentPath, keyword, outResults);
 }
 
-// 搜索（指定目录）
+// 搜索文件/目录（指定目录重载）
 Status FileManager::search(const Path& dirPath, const std::string& keyword, std::vector<FileInfo>& outResults) const {
     outResults.clear();
-    
-    // 模拟搜索结果
-    std::vector<FileInfo> allMockFiles = {
-        {
-            "project.txt",
-            dirPath / "project.txt",
-            FileType::File,
-            2048,
-            std::filesystem::file_time_type::clock::now()
-        },
-        {
-            "data",
-            dirPath / "data",
-            FileType::Directory,
-            0,
-            std::filesystem::file_time_type::clock::now()
-        },
-        {
-            "readme.md",
-            dirPath / "readme.md",
-            FileType::File,
-            1024,
-            std::filesystem::file_time_type::clock::now()
-        },
-        {
-            "project_backup.txt",
-            dirPath / "backup" / "project_backup.txt",
-            FileType::File,
-            2048,
-            std::filesystem::file_time_type::clock::now()
-        }
-    };
-    
-    // 简单的关键词匹配
-    for (const auto& file : allMockFiles) {
-        if (file.name.find(keyword) != std::string::npos) {
-            outResults.push_back(file);
-        }
+    if (keyword.empty()) {
+        return Status::Error(StatusCode::InvalidArguments, "Missing keyword: Please enter 'search [keyword]'");
     }
-    
+
+    fs::path targetDir = dirPath.is_absolute() ? dirPath : currentPath / dirPath;
+    if (!fs::exists(targetDir) || !fs::is_directory(targetDir)) {
+        return Status::Error(StatusCode::PathNotFound, "Invalid directory: " + targetDir.string());
+    }
+
+    // 递归遍历目录，不区分大小写匹配关键词
+    std::string lowerKeyword = keyword;
+    std::transform(lowerKeyword.begin(), lowerKeyword.end(), lowerKeyword.begin(), ::tolower);
+
+    try {
+        for (const auto& entry : fs::recursive_directory_iterator(targetDir)) {
+            std::string filename = entry.path().filename().string();
+            std::string lowerFilename = filename;
+            std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+            // 关键词匹配
+            if (lowerFilename.find(lowerKeyword) != std::string::npos) {
+                FileInfo info;
+                info.name = filename;
+                info.path = entry.path();
+                info.type = entry.is_directory() ? FileType::Directory : FileType::File;
+                info.modifyTime = entry.last_write_time();
+                outResults.push_back(info);
+            }
+        }
+    } catch (const fs::filesystem_error& e) {
+        return Status::Error(StatusCode::PermissionDenied, "Search failed: Permission denied - " + std::string(e.what()));
+    }
+
     return Status::Success();
 }
