@@ -367,10 +367,48 @@ Status FileManager::removePath(const Path& targetPath) {
 
 // 复制
 Status FileManager::copyItem(const Path& src, const Path& dst) {
-    // 占位实现：模拟成功
-    return Status::Success();
-}
+    // 解析源路径和目标路径
+    fs::path srcPath = src.is_absolute() ? src : currentPath / src;
+    fs::path dstPath = dst.is_absolute() ? dst : currentPath / dst;
 
+    // 校验源路径存在
+    if (!fs::exists(srcPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Source not found: " + srcPath.string());
+    }
+
+    // 处理目标路径（如果是目录，自动拼接源文件名）
+    if (fs::is_directory(dstPath)) {
+        dstPath = dstPath / srcPath.filename();
+    }
+
+    // 目标文件已存在：询问是否覆盖
+    if (fs::exists(dstPath)) {
+        std::cout << "File exists in target: Overwrite? (y/n) ";
+        char choice;
+        std::cin >> choice;
+        if (choice != 'y' && choice != 'Y') {
+            return Status::Success("Copy cancelled");
+        }
+    }
+
+    // 执行复制（文件）
+    if (fs::is_regular_file(srcPath)) {
+        try {
+            fs::copy(srcPath, dstPath, fs::copy_options::overwrite_existing);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::CopyFailed, "Copy failed: " + std::string(e.what()));
+        }
+    } else {
+        // 复制目录（递归）
+        try {
+            fs::copy(srcPath, dstPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+        } catch (const fs::filesystem_error& e) {
+            return Status::Error(StatusCode::CopyFailed, "Copy directory failed: " + std::string(e.what()));
+        }
+    }
+
+    return Status::Success("Copy successfully");
+}
 // 移动/重命名
 Status FileManager::moveItem(const Path& src, const Path& dst) {
     // 占位实现：模拟成功
