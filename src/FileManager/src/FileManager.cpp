@@ -365,7 +365,7 @@ Status FileManager::removePath(const Path& targetPath) {
     return Status::Success("Delete successfully");
 }
 
-// 复制
+// 复制文件/目录（cp 命令）
 Status FileManager::copyItem(const Path& src, const Path& dst) {
     // 解析源路径和目标路径
     fs::path srcPath = src.is_absolute() ? src : currentPath / src;
@@ -409,10 +409,52 @@ Status FileManager::copyItem(const Path& src, const Path& dst) {
 
     return Status::Success("Copy successfully");
 }
-// 移动/重命名
+
+// 移动/重命名文件/目录（mv 命令）
 Status FileManager::moveItem(const Path& src, const Path& dst) {
-    // 占位实现：模拟成功
-    return Status::Success();
+    fs::path srcPath = src.is_absolute() ? src : currentPath / src;
+    fs::path dstPath = dst.is_absolute() ? dst : currentPath / dst;
+
+    // 校验源路径存在
+    if (!fs::exists(srcPath)) {
+        return Status::Error(StatusCode::PathNotFound, "Source not found: " + srcPath.string());
+    }
+
+    // 处理目标路径（目录则拼接源文件名）
+    if (fs::is_directory(dstPath)) {
+        dstPath = dstPath / srcPath.filename();
+    }
+
+    // 目标已存在：询问是否覆盖
+    if (fs::exists(dstPath)) {
+        std::cout << "Target exists: Overwrite? (y/n) ";
+        char choice;
+        std::cin >> choice;
+        if (choice != 'y' && choice != 'Y') {
+            return Status::Success("Move cancelled");
+        }
+        // 先删除目标（避免重命名失败）
+        fs::remove_all(dstPath);
+    }
+
+    // 执行移动/重命名
+    try {
+        fs::rename(srcPath, dstPath);
+    } catch (const fs::filesystem_error& e) {
+        // 跨文件系统 rename 失败，降级为 copy + remove
+        try {
+            if (fs::is_directory(srcPath)) {
+                fs::copy(srcPath, dstPath, fs::copy_options::recursive);
+            } else {
+                fs::copy(srcPath, dstPath);
+            }
+            fs::remove_all(srcPath);
+        } catch (const fs::filesystem_error& e2) {
+            return Status::Error(StatusCode::MoveFailed, "Move failed: " + std::string(e2.what()));
+        }
+    }
+
+    return Status::Success("Move successfully");
 }
 
 // 搜索（在当前目录）
