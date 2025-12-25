@@ -175,6 +175,11 @@ private:
             if (onDiskUsage) onDiskUsage(temp_path_src);
         });
 
+        // help
+        app.add_subcommand("help", "Show help")->callback([this](){
+            std::cout << app.help() << std::endl;
+        });
+
         // exit
         app.add_subcommand("exit", "Exit shell")->callback([this](){
             if (onExit) onExit();
