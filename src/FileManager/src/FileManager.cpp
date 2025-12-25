@@ -1,6 +1,16 @@
 #include "FileManager.h"
 #include <algorithm>
 #include <sstream>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <chrono>
+#include <unistd.h>
+#include <pwd.h>
+#include <climits>
+
+namespace fs = std::filesystem;
+using std::chrono::system_clock;
 
 // 构造函数
 FileManager::FileManager(const std::string& initPath) {
@@ -11,7 +21,7 @@ FileManager::FileManager(const std::string& initPath) {
         if (getcwd(buf, sizeof(buf)) != nullptr) {
             currentPath = fs::path(buf);
         } else {
-            currentPath = "/home/user/documents"
+            currentPath = "/home/user/documents";
             throw std::runtime_error("Failed to get current working directory,set at address /home/user/documents");
         }
     } else {
@@ -72,7 +82,7 @@ Status FileManager::changeDirectory(const Path& targetPath) {
 
 // 辅助函数：文件时间转换为字符串（格式：YYYY-MM-DD HH:MM:SS）
 std::string FileManager::fileTimeToString(const fs::file_time_type& fileTime) const {
-    auto sysTime = fs::file_clock::to_sys(fileTime);
+    auto sysTime = std::chrono::file_clock::to_sys(fileTime);
     auto timeT = system_clock::to_time_t(sysTime);
     std::tm tm = *std::localtime(&timeT);
     std::stringstream ss;

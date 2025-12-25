@@ -12,9 +12,14 @@ class FileManager {
 private:
     std::filesystem::path currentPath;
 
+    // 辅助函数
+    uintmax_t calculateDirTotalSize(const Path& dirPath) const;
+    bool pathExists(const Path& targetPath) const;
+    std::string fileTimeToString(const std::filesystem::file_time_type& fileTime) const;
+
 public:
     // 构造函数
-    FileManager();
+    FileManager(const std::string& initPath = "");
     // 析构函数
     ~FileManager();
 

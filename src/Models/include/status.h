@@ -30,6 +30,6 @@ struct Status
 
     bool ok() const;
 
-    static Status Success();
+    static Status Success(std::string msg = "");
     static Status Error(StatusCode c, const std::string &msg);
 };

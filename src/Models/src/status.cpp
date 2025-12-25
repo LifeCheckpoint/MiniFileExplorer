@@ -9,9 +9,9 @@ bool Status::ok() const
     return code == StatusCode::Success;
 }
 
-Status Status::Success()
+Status Status::Success(std::string msg)
 {
-    return Status(StatusCode::Success);
+    return Status(StatusCode::Success, std::move(msg));
 }
 
 Status Status::Error(StatusCode c, const std::string &msg)
