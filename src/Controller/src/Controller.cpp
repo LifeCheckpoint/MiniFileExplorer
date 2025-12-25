@@ -133,16 +133,31 @@ void Controller::setupBindings()
         FileInfo info;
         Status status = fileManager->getFileStat(path, info);
         if (status.ok()) {
-            fmt::print(
-                "Name: {}\nType: {}\nPath: {}\nSize: {} bytes\nCreated: {}\nModified: {}\nAccessed: {}\n",
-                info.name,
-                (info.type == FileType::Directory) ? "Directory" : (info.type == FileType::File) ? "File" : "Unknown",
-                info.path.string(),
-                (info.type == FileType::Directory) ? "-" : std::to_string(info.size),
-                fileTimeToString(info.createTime),
-                fileTimeToString(info.modifyTime),
-                fileTimeToString(info.accessTime)
-            );
+            tabulate::Table statTable;
+            statTable.add_row({"Property", "Value"});
+            statTable.add_row({"Name", info.name});
+            statTable.add_row({"Type", (info.type == FileType::Directory) ? "Dir" : (info.type == FileType::File) ? "File" : "Unknown"});
+            statTable.add_row({"Path", info.path.string()});
+            statTable.add_row({"Size", (info.type == FileType::Directory) ? "-" : std::to_string(info.size) + " bytes"});
+            statTable.add_row({"Created", fileTimeToString(info.createTime)});
+            statTable.add_row({"Modified", fileTimeToString(info.modifyTime)});
+            statTable.add_row({"Accessed", fileTimeToString(info.accessTime)});
+
+            statTable.format()
+                     .font_style({tabulate::FontStyle::bold})
+                     .border_top(" ")
+                     .border_bottom(" ")
+                     .border_left(" ")
+                     .border_right(" ")
+                     .corner(" ");
+            statTable[0].format()
+                        .padding_top(1)
+                        .padding_bottom(1)
+                        .font_align(tabulate::FontAlign::center)
+                        .font_style({tabulate::FontStyle::underline})
+                        .font_background_color(tabulate::Color::blue);
+            statTable.column(0).format().font_color(tabulate::Color::cyan);
+            statTable.print(std::cout);
         } else {
             fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
