@@ -7,7 +7,7 @@
 #include <fmt/color.h>
 #include "Controller.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     replxx::Replxx rx;
     rx.install_window_change_handler();
 
@@ -27,14 +27,24 @@ int main() {
     fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold, "Mini File Explorer Demo\n");
     fmt::print(fg(fmt::color::green) | fmt::emphasis::bold, "Created by LifeCheckpoint, LightningHonor.\n");
 
-    Controller controller;
+    std::string initPath = "";
+    if (argc > 1) {
+        initPath = argv[1];
+    }
+
+    std::unique_ptr<Controller> controller;
+    try {
+        controller = std::make_unique<Controller>(initPath);
+    } catch (const std::runtime_error& e) {
+        fmt::print(fg(fmt::color::red), "{}\n", e.what());
+        return 1;
+    }
 
     while (true) {
         Path cur_path;
-        controller.fileManager->getCurrentPath(cur_path);
-        if (!cur_path.has_filename()) {
-            cur_path = cur_path.parent_path();
-        }
+        controller->fileManager->getCurrentPath(cur_path);
+        fmt::print("Current Directory: {}\n", cur_path.string());
+
         std::string prompt = fmt::format("\033[1;34m[{}]\033[0m {}> ", line_count, cur_path.filename().string()); // Blue
         const char* input = rx.input(prompt);
 
@@ -47,10 +57,13 @@ int main() {
         rx.history_add(val);
         line_count++;
 
-        if (val == "exit") break;
+        if (val == "exit") {
+            fmt::print("MiniFileExplorer closed successfully\n");
+            break;
+        }
         
         // Parse commands
-        controller.parse(val);
+        controller->parse(val);
     }
 
     return 0;

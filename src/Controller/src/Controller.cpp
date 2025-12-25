@@ -11,8 +11,8 @@
 
 using Path = std::filesystem::path;
 
-Controller::Controller() {
-    fileManager = std::make_shared<FileManager>();
+Controller::Controller(const std::string& initPath) {
+    fileManager = std::make_shared<FileManager>(initPath);
     commandParser = std::make_shared<CommandParser>();
     setupBindings();
 }
@@ -39,12 +39,16 @@ void Controller::setupBindings()
         Status status = fileManager->listFiles(sortMode, files);
         if (status.ok()) {
             tabulate::Table fileTable;
-            fileTable.add_row({"Name", "Type", "Size (bytes)", "Last Modified"});
+            fileTable.add_row({"Name", "Type", "Size(B)", "Modify Time"});
 
             for (const auto& file : files) {
+                std::string displayName = file.name;
+                if (file.type == FileType::Directory) {
+                    displayName += "/";
+                }
                 fileTable.add_row({
-                    file.name,
-                    (file.type == FileType::Directory) ? "Directory" : (file.type == FileType::File) ? "File" : "Unknown",
+                    displayName,
+                    (file.type == FileType::Directory) ? "Dir" : (file.type == FileType::File) ? "File" : "Unknown",
                     (file.type == FileType::Directory) ? "" : std::to_string(file.size),
                     fileTimeToString(file.modifyTime)
                 });
@@ -130,11 +134,14 @@ void Controller::setupBindings()
         Status status = fileManager->getFileStat(path, info);
         if (status.ok()) {
             fmt::print(
-                "Name: {}\nType: {}\nSize: {} bytes\nLast Modified: {}\n",
+                "Name: {}\nType: {}\nPath: {}\nSize: {} bytes\nCreated: {}\nModified: {}\nAccessed: {}\n",
                 info.name,
                 (info.type == FileType::Directory) ? "Directory" : (info.type == FileType::File) ? "File" : "Unknown",
-                info.size,
-                fileTimeToString(info.modifyTime)
+                info.path.string(),
+                (info.type == FileType::Directory) ? "-" : std::to_string(info.size),
+                fileTimeToString(info.createTime),
+                fileTimeToString(info.modifyTime),
+                fileTimeToString(info.accessTime)
             );
         } else {
             fmt::print(fg(fmt::color::red), "{}\n", status.message);
@@ -161,7 +168,7 @@ void Controller::setupBindings()
         uintmax_t size;
         Status status = fileManager->calculateDirSize(path, size);
         if (status.ok()) {
-            fmt::print("Size: {} bytes\n", size);
+            fmt::print("Total size of {}: {}\n", path, formatSize(size));
         } else {
             fmt::print(fg(fmt::color::red), "{}\n", status.message);
         }
@@ -180,11 +187,17 @@ std::string Controller::fileTimeToString(const std::filesystem::file_time_type& 
     auto sys_time = std::chrono::file_clock::to_sys(ftime);
     auto time_t_val = std::chrono::system_clock::to_time_t(sys_time);
     auto local_tm = *std::localtime(&time_t_val);
-    return fmt::format("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}\n",
+    return fmt::format("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}",
                        local_tm.tm_year + 1900,
                        local_tm.tm_mon + 1,
                        local_tm.tm_mday,
                        local_tm.tm_hour,
                        local_tm.tm_min,
                        local_tm.tm_sec);
+}
+
+std::string Controller::formatSize(uintmax_t bytes) {
+    if (bytes < 1024) return std::to_string(bytes) + " B";
+    if (bytes < 1024 * 1024) return std::to_string(bytes / 1024) + " KB";
+    return std::to_string(bytes / (1024 * 1024)) + " MB";
 }

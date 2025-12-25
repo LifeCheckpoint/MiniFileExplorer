@@ -136,7 +136,10 @@ Status FileManager::listFiles(SortMode sortMode, std::vector<FileInfo>& outFiles
                 [](const FileInfo& a, const FileInfo& b) {
                     uintmax_t sizeA = (a.type == FileType::File) ? a.size : a.dirTotalSize;
                     uintmax_t sizeB = (b.type == FileType::File) ? b.size : b.dirTotalSize;
-                    return sizeA > sizeB;
+                    if (sizeA != sizeB) return sizeA > sizeB;
+                    // 大小相同时，空文件夹排在最后
+                    if (a.type != b.type) return a.type == FileType::File;
+                    return a.name < b.name;
                 });
             break;
         case SortMode::ByTime:

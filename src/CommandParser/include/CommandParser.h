@@ -1,5 +1,7 @@
 #pragma once
 #include <CLI/CLI.hpp>
+#include <fmt/core.h>
+#include <fmt/color.h>
 #include <string>
 #include <vector>
 #include <functional>
@@ -150,8 +152,12 @@ private:
 
         // stat
         auto cmd_stat = app.add_subcommand("stat", "Show file status");
-        cmd_stat->add_option("path", temp_path_src, "Path")->required();
+        cmd_stat->add_option("path", temp_path_src, "Path");
         cmd_stat->callback([this]() {
+            if (temp_path_src.empty()) {
+                fmt::print(fg(fmt::color::red), "Missing target: Please enter 'stat [name]'\n");
+                return;
+            }
             if (onStat) onStat(temp_path_src);
         });
 
